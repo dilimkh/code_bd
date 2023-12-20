@@ -1,0 +1,103 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+
+namespace WpfApp2
+{
+    /// <summary>
+    /// Логика взаимодействия для vhod.xaml
+    /// </summary>
+    /// 
+    public class AuthenticationService
+    {
+        public static Users AuthenticateUser(string login, string password)
+        {
+            using (var context = new uchetEntities1()) // Замените на ваш контекст данных
+            {
+                return context.Users.FirstOrDefault(u => u.Login == login && u.Password == password);
+            }
+        }
+    }
+    public partial class vhod : Window
+    {
+        public vhod()
+        {
+            InitializeComponent();
+        }
+        private void ShowErrorMessage(string message)
+        {
+            MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private void LoginTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string login = loginTextBox.Text;
+
+            // Проверка на пустоту логина
+            if (string.IsNullOrEmpty(login))
+            {
+                // Если логин пуст, вы можете отобразить сообщение об ошибке или визуальную подсказку.
+                ShowErrorMessage("Логин обязателен для заполнения.");
+            }
+        }
+
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            PasswordBox passwordBox = (PasswordBox)sender;
+            string password = passwordBox.Password;
+
+            // Проверка на пустоту пароля
+            if (string.IsNullOrEmpty(password))
+            {
+                ShowErrorMessage("Пароль обязателен для заполнения.");
+            }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            string login = loginTextBox.Text;
+            string password = passwordBox.Password;
+
+            var user = AuthenticationService.AuthenticateUser(login, password);
+
+            if (user!= null)
+            {
+                // Вход успешен
+                // Открытие нового окна в зависимости от роли пользователя
+                vse_zayvki vse_zayvkiWindow = new vse_zayvki(user);
+                vse_zayvkiWindow.Show();
+                this.Close();
+            }
+            else
+            {
+                List<string> errorMessages = new List<string>();
+
+                if (string.IsNullOrEmpty(login))
+                {
+                    errorMessages.Add("Пожалуйста, заполните поле 'Логин'.");
+                }
+
+                if (string.IsNullOrEmpty(password))
+                {
+                    errorMessages.Add("Пожалуйста, заполните поле 'Пароль'.");
+                }
+
+                if (errorMessages.Count > 0)
+                {
+                    string errorMessage = "Не удалось войти из-за следующих ошибок:" + Environment.NewLine + string.Join(Environment.NewLine, errorMessages);
+                    ShowErrorMessage(errorMessage);
+                }
+            }
+        }
+    }
+}
